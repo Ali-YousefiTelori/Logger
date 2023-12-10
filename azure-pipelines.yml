@@ -1,0 +1,31 @@
+trigger:
+- master
+
+stages:
+  - stage: build
+    jobs:
+    - job: Logger
+      strategy:
+        matrix:
+          Windows:
+            imageName: 'windows-latest'
+      pool:
+        vmImage: $(imageName)
+      steps:
+        - task: UseDotNet@2
+          name: InstallDotNet7
+          inputs:
+            version: '7.x'
+        - task: DotNetCoreCLI@2
+          name: Build_7X
+          inputs:
+            command: 'build'
+        - task: DotNetCoreCLI@2
+          name: Test_7X
+          inputs:
+            command: 'test'
+            arguments: '--logger "console;verbosity=detailed;" --collect "Code coverage"'
+        - task: PublishCodeCoverageResults@1
+          inputs:
+            codeCoverageTool: 'JaCoCo'
+            summaryFileLocation: $(System.DefaultWorkingDirectory)/coverage.xml
